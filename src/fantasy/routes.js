@@ -63,11 +63,17 @@ router.post('/groups/join', auth.requireAuth, (req, res) => {
 
 // Adjunta a cada jugador de una plantilla su precio/equipo/valoracion 2K
 // actuales, y calcula el valor total de la plantilla al precio de mercado
-// de hoy (no lo que costó al ficharlo).
+// de hoy (no lo que costó al ficharlo). Si un jugador ya no está en
+// ninguna plantilla NBA activa (cortado, retirado...) se muestra igual con
+// su último precio conocido y marcado `inactive: true`, en vez de
+// desaparecer sin más y quedarse atrapado en la plantilla sin poder
+// venderlo.
 function enrichRoster(rosterData) {
   const marketPlayers = market.getMarketPlayers();
   const byId = new Map(marketPlayers.map((p) => [String(p.id), p]));
-  const players = rosterData.playerIds.map((id) => byId.get(String(id))).filter(Boolean);
+  const players = rosterData.playerIds
+    .map((id) => byId.get(String(id)) || market.getFrozenPlayerEntry(id))
+    .filter(Boolean);
   const rosterValue = players.reduce((sum, p) => sum + p.price, 0);
   return { ...rosterData, players, rosterValue };
 }

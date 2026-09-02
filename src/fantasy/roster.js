@@ -3,7 +3,7 @@
 // liga tengan al mismo jugador (como en cualquier liga fantasy real).
 const store = require('./store');
 const { getGroupById, requireMembership, initRoster } = require('./groups');
-const { getPlayerMarketEntry } = require('./market');
+const { getPlayerMarketEntry, getFrozenPlayerEntry } = require('./market');
 
 const MAX_ROSTER_SIZE = 15;
 
@@ -72,7 +72,10 @@ function sellPlayer(groupId, userId, playerId) {
     throw new Error('No tienes a ese jugador en tu plantilla');
   }
 
-  const player = getPlayerMarketEntry(pid);
+  // Un jugador cortado/retirado ya no sale en el mercado en vivo, pero
+  // sigue teniendo un precio congelado (su ultimo valor conocido): se
+  // vende por eso, no por $0, para no dejarlo atrapado en la plantilla.
+  const player = getPlayerMarketEntry(pid) || getFrozenPlayerEntry(pid);
   const sellPrice = player ? player.price : 0;
 
   roster.playerIds = roster.playerIds.filter((id) => id !== pid);

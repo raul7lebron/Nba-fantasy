@@ -59,6 +59,7 @@ function playerCardHtml(p, actionHtml) {
         </div>
         ${p.rating2k ? `<span class="pill" style="color:${fantasyRatingColor(p.rating2k)};border-color:${fantasyRatingColor(p.rating2k)}66">${p.rating2k}</span>` : ''}
       </div>
+      ${p.inactive ? '<span class="pill" style="color:#ff6b6b;border-color:#ff6b6b66">Ya no está en un equipo NBA (precio congelado)</span>' : ''}
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
         <strong style="color:var(--accent)">${fantasyFormatMoney(p.price)}</strong>
         ${actionHtml}
