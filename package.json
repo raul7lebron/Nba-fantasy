@@ -1,0 +1,19 @@
+{
+  "name": "nba-fantasy",
+  "version": "1.0.0",
+  "description": "Fantasy NBA: ficha jugadores reales con precios basados en su valoracion NBA 2K, compite en ligas de hasta 10 usuarios y gana dinero segun su rendimiento partido a partido",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "refresh": "node src/refreshAll.js",
+    "fantasy:process": "node src/fantasy/gameProcessor.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-cron": "^3.0.3"
+  }
+}
