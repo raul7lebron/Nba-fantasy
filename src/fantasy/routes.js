@@ -5,6 +5,7 @@ const auth = require('./auth');
 const groups = require('./groups');
 const roster = require('./roster');
 const market = require('./market');
+const billing = require('./billing');
 const store = require('./store');
 
 const router = express.Router();
@@ -131,6 +132,28 @@ router.post('/groups/:id/roster/sell', auth.requireAuth, (req, res) => {
   try {
     const rosterData = roster.sellPlayer(req.params.id, req.fantasyUser.id, req.body && req.body.playerId);
     res.json(enrichRoster(rosterData));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Suscripción "sin anuncios" (ver src/fantasy/billing.js). El webhook de
+// Stripe se monta directamente en server.js, no aquí, porque necesita el
+// cuerpo de la petición en crudo (sin el parser JSON) para verificar la
+// firma.
+router.post('/billing/checkout', auth.requireAuth, async (req, res) => {
+  try {
+    const url = await billing.createCheckoutSession(req.fantasyUser);
+    res.json({ url });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/billing/portal', auth.requireAuth, async (req, res) => {
+  try {
+    const url = await billing.createPortalSession(req.fantasyUser);
+    res.json({ url });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

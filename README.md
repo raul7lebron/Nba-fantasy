@@ -29,6 +29,10 @@ rendimiento partido a partido.
 - **Clasificación**: cada liga se ordena por la valoración total acumulada
   por la plantilla de cada usuario a lo largo de la temporada (no por
   dinero), que es a fin de cuentas a quién compite el juego.
+- **Anuncios**: cada 5 minutos de uso real de la app (solo cuenta con la
+  pestaña en primer plano) aparece un anuncio interstitial. Los usuarios con
+  la membresía "sin anuncios" (suscripción vía Stripe) no los ven — ver
+  sección 2.
 
 ## 1. Configurar las claves de las APIs
 
@@ -50,13 +54,44 @@ cp .env.example .env
   key"). Da las valoraciones NBA 2K que fijan el precio inicial de cada
   jugador.
 
-## 2. Instalar dependencias
+## 2. Membresía sin anuncios (Stripe)
+
+Los anuncios (huecos de prueba por ahora — ver "Anuncios reales" más abajo)
+se pueden quitar con una suscripción mensual. Para activarla:
+
+1. Crea una cuenta gratis en https://dashboard.stripe.com/register (empieza
+   en modo test, no hace falta activar pagos reales todavía).
+2. **`STRIPE_SECRET_KEY`**: Developers → API keys → Secret key.
+3. Crea un producto recurrente (ej. "Sin anuncios", $2.99/mes) en Product
+   catalog y copia el ID de su precio (`price_...`) en **`STRIPE_PRICE_ID`**.
+4. Developers → Webhooks → añade un endpoint a
+   `https://tu-dominio.com/api/fantasy/billing/webhook` (en local, usa la
+   Stripe CLI: `stripe listen --forward-to localhost:3000/api/fantasy/billing/webhook`)
+   escuchando `checkout.session.completed`, `customer.subscription.updated`
+   y `customer.subscription.deleted`. Copia el "Signing secret" en
+   **`STRIPE_WEBHOOK_SECRET`**.
+5. Pon tu dominio real en **`SITE_URL`** (las URLs de vuelta de Stripe
+   Checkout/Portal lo necesitan).
+
+Sin estas claves, la app funciona igual pero el botón "Suscribirme" de
+`/membership.html` da error en vez de abrir Stripe Checkout — los anuncios
+seguirán apareciendo cada 5 minutos para todos los usuarios.
+
+### Anuncios reales
+
+`public/js/fantasy/ads.js` muestra ahora mismo un hueco de anuncio de
+prueba (`.ad-slot-placeholder`). Para poner anuncios reales, sustituye ese
+bloque por el código de tu red de anuncios (Google AdSense u otra) cuando
+tengas la cuenta aprobada — el temporizador de 5 minutos y el control de
+quién los ve (según `isPremium`) ya está hecho.
+
+## 3. Instalar dependencias
 
 ```bash
 npm install
 ```
 
-## 3. Arrancar el servidor
+## 4. Arrancar el servidor
 
 ```bash
 npm start
@@ -69,7 +104,7 @@ descarga automáticamente equipos, plantillas, partidos de la temporada
 actual y valoraciones 2K (puede tardar varios minutos por el límite de
 peticiones por minuto de las APIs gratuitas).
 
-## 4. Actualización automática
+## 5. Actualización automática
 
 Mientras el proceso `npm start` esté corriendo, tres tareas programadas
 (`node-cron`) mantienen todo al día:
@@ -89,13 +124,16 @@ node src/refreshAll.js games
 npm run fantasy:process       # procesar partidos ya terminados a mano
 ```
 
-## 5. Desplegar en un servicio real
+## 6. Desplegar en un servicio real
 
 App Node.js estándar (Express): puedes desplegarla en Render, Railway, un
 VPS con PM2, etc.
 
-- Configura `BALLDONTLIE_API_KEY` y `NBA2KAPI_KEY` en el panel del
-  hosting.
+- Configura `BALLDONTLIE_API_KEY`, `NBA2KAPI_KEY`, `SITE_URL` (tu dominio
+  real) y, si activaste la membresía, `STRIPE_SECRET_KEY`,
+  `STRIPE_PRICE_ID` y `STRIPE_WEBHOOK_SECRET` en el panel del hosting.
+  Acuérdate de apuntar el webhook de Stripe a tu dominio real (no a
+  localhost) una vez desplegada.
 - Si tu hosting permite disco persistente (ej. Render Disks), móntalo y
   añade la variable `DATA_DIR` apuntando a esa ruta. Así la caché de
   `data/*.json` (usuarios, ligas, plantillas, precios...) sobrevive a los
@@ -119,8 +157,11 @@ src/fantasy/roster.js          Fichar/vender jugadores dentro de una liga
 src/fantasy/market.js          Lista de jugadores con su precio actual
 src/fantasy/pricing.js         Fórmulas de precio, valoración y dinero por partido
 src/fantasy/gameProcessor.js   Procesa partidos terminados: ajusta precios y reparte dinero
+src/fantasy/billing.js         Membresía sin anuncios: Stripe Checkout + Customer Portal + webhook
 src/fantasy/routes.js          Rutas /api/fantasy/*
 public/index.html              Login/registro y gestión de ligas
 public/group.html              Mercado / mi plantilla / clasificación de una liga
+public/membership.html         Suscribirse / gestionar la membresía sin anuncios
+public/js/fantasy/ads.js       Temporizador del anuncio interstitial (cada 5 min de uso)
 public/                        Frontend (HTML/CSS/JS vanilla)
 ```

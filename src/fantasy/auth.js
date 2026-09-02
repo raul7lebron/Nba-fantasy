@@ -71,7 +71,7 @@ function requireAuth(req, res, next) {
 }
 
 function publicUser(user) {
-  return { id: user.id, username: user.username, displayName: user.displayName };
+  return { id: user.id, username: user.username, displayName: user.displayName, isPremium: !!user.isPremium };
 }
 
 module.exports = { registerUser, verifyLogin, createSession, getUserFromToken, requireAuth, publicUser };

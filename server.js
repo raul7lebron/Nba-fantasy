@@ -5,9 +5,23 @@ const path = require('path');
 const { readCache } = require('./src/cache');
 const { refreshAll, refreshRatings2k } = require('./src/refreshAll');
 const { startScheduler } = require('./src/scheduler');
+const billing = require('./src/fantasy/billing');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// El webhook de Stripe necesita el cuerpo de la petición sin parsear (para
+// verificar la firma), así que se monta ANTES de express.json() con su
+// propio parser en crudo.
+app.post('/api/fantasy/billing/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    await billing.handleWebhookEvent(req.body, req.headers['stripe-signature']);
+    res.json({ received: true });
+  } catch (err) {
+    console.error('[stripe webhook] error:', err.message);
+    res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+});
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
