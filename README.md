@@ -5,6 +5,11 @@ inicial, compite en una liga cerrada de hasta 10 usuarios, y el precio de
 cada jugador (y el dinero que gana su dueño) se ajusta solo según su
 rendimiento partido a partido.
 
+Es una PWA (Progressive Web App): se puede instalar en el móvil como una
+app normal, sin pasar por Google Play ni la App Store. Abre la web desde
+Chrome (Android) o Safari (iPhone) y dale a "Instalar app" / "Añadir a
+pantalla de inicio" — queda con su icono y se abre a pantalla completa.
+
 ## Reglas del juego
 
 - **Presupuesto inicial**: $160.000.000 por usuario para formar plantilla al
@@ -140,6 +145,10 @@ VPS con PM2, etc.
   redeploys en vez de perderse cada vez.
 - El proceso debe quedarse corriendo de forma continua (no serverless
   "one-shot") para que los cron internos se ejecuten.
+- **La instalación como app (PWA) necesita HTTPS** (en local, `localhost`
+  vale sin HTTPS para probar). Render, Railway y la mayoría de hostings dan
+  HTTPS automático con su propio dominio, así que no hay que configurar
+  nada aparte.
 
 ## Estructura
 
@@ -163,5 +172,9 @@ public/index.html              Login/registro y gestión de ligas
 public/group.html              Mercado / mi plantilla / clasificación de una liga
 public/membership.html         Suscribirse / gestionar la membresía sin anuncios
 public/js/fantasy/ads.js       Temporizador del anuncio interstitial (cada 5 min de uso)
+public/manifest.json           Manifest de la PWA (icono, nombre, colores)
+public/sw.js                   Service worker (cachea el app shell para instalar/ir rápido)
+public/js/pwa.js               Registra el service worker
+public/img/icon-*.png          Iconos de la app (192/512, normal y "maskable")
 public/                        Frontend (HTML/CSS/JS vanilla)
 ```
